@@ -13,13 +13,13 @@ The patcher validates the expected AKAIITO HD Remaster executable and Unity asse
 ## What is included
 
 ```text
-resources/patch_clean_copy.py  reproducible scene and startup patcher
-resources/patch_clean_dll.py   managed-DLL startup patch helper
-resources/AKAIITO4x3Launcher.cs launcher source
-resources/AKAIITO4x3Launcher.exe standalone launcher artifact
+resources/patch_clean_copy.py       reproducible scene and startup patcher
+resources/patch_clean_dll.py        managed-DLL startup patch helper
+resources/AKAIITO4x3Launcher.exe    standalone Windows launcher
+resources/AKAIITO4x3Launcher.c      launcher source
 ```
 
-No game files, extracted assets, screenshots, or original binaries are included in this repository.
+No game files, extracted assets, screenshots, or original game binaries are included in this repository.
 
 ## Usage
 
@@ -35,11 +35,23 @@ The patcher creates per-file backups and writes:
 AKAIITO-4x3-patch-manifest.json
 ```
 
-The launcher accepts one width and derives the 4:3 height:
+### Launcher
+
+Copy `resources\AKAIITO4x3Launcher.exe` beside `AKAIITO_HD_REMASTER.exe`. The launcher determines its own directory at runtime, so there is no machine-specific hardcoded path and it does not depend on the caller's working directory.
+
+Pass one width; the launcher derives the matching 4:3 height:
 
 ```powershell
-resources\AKAIITO4x3Launcher.exe 1440 windowed
+AKAIITO4x3Launcher.exe 1440 windowed
 ```
+
+or:
+
+```powershell
+AKAIITO4x3Launcher.exe 1920 fullscreen
+```
+
+The launcher is a standalone 64-bit Windows executable and does not contain or distribute the game.
 
 The supported development dependency versions used during investigation were:
 
@@ -51,14 +63,12 @@ dnfile
 dncil
 ```
 
-The launcher is a convenience artifact and does not contain or distribute the game.
-
 ## Rollback
 
 Each changed game file receives a `.bak-4x3-clean-*` backup. The manifest records original and patched SHA-256 hashes and the exact backup paths. To roll back, restore the relevant backup files beside the game data.
 
 ## Distribution policy
 
-This is an unofficial patch. It does not grant rights to the game or its assets. Do not redistribute the game, original archives, extracted assets, or patched game files. Only distribute this patch source/artifact to users who already have their own legally obtained copy, subject to the game's license and applicable law.
+This is an unofficial fan patch and is not affiliated with or endorsed by SUCCESS Corp. It does not grant any rights to AKAIITO HD Remaster or its assets.
 
-The repository should remain private unless the relevant rights holder has approved public redistribution.
+This repository distributes only patch/launcher tooling. Users must provide their own legally obtained game copy. Do not redistribute the game, original archives, extracted assets, or patched game files. Users are responsible for complying with the game's license and applicable law.
