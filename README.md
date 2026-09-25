@@ -21,7 +21,37 @@ resources/AKAIITO4x3Launcher.cs     portable launcher source
 
 No game files, extracted assets, screenshots, or original game binaries are included in this repository.
 
-## Usage
+## Quick start: launcher release
+
+1. Download `AKAIITO4x3Launcher.exe` from the repository's **Releases** page.
+2. Put it beside your legally obtained game's `AKAIITO_HD_REMASTER.exe`.
+3. Open PowerShell in that folder, or use the shortcut arguments below.
+
+Example layout:
+
+```text
+YourGameFolder\\
+  AKAIITO_HD_REMASTER.exe
+  AKAIITO4x3Launcher.exe
+```
+
+Windowed 4:3 launch:
+
+```powershell
+.\\AKAIITO4x3Launcher.exe 1440 windowed
+```
+
+Fullscreen launch:
+
+```powershell
+.\\AKAIITO4x3Launcher.exe 1920 fullscreen
+```
+
+The first argument is the width. The launcher calculates the 4:3 height automatically. The second argument is optional and accepts `windowed` or `fullscreen`; the default is windowed.
+
+The launcher contains no game data. It only locates the normal game executable beside itself and passes Unity's standard `-screen-width`, `-screen-height`, and `-screen-fullscreen` arguments.
+
+## Applying the patch
 
 You must provide your own legally obtained clean AKAIITO HD Remaster copy. From a development environment with the patcher's Python dependencies installed:
 
@@ -35,9 +65,9 @@ The patcher creates per-file backups and writes:
 AKAIITO-4x3-patch-manifest.json
 ```
 
-### Launcher
+### Launcher source
 
-Copy `resources\AKAIITO4x3Launcher.exe` beside `AKAIITO_HD_REMASTER.exe`. The launcher determines its own directory at runtime, so there is no machine-specific hardcoded path and it does not depend on the caller's working directory.
+The source for the release executable is `resources/AKAIITO4x3Launcher.cs`. The release executable is built as a standard Windows .NET Framework console application and does not require a separate runtime installation on normal Windows systems.
 
 Pass one width; the launcher derives the matching 4:3 height:
 
