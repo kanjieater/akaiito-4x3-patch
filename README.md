@@ -16,7 +16,7 @@ The patcher validates the expected AKAIITO HD Remaster executable and Unity asse
 resources/patch_clean_copy.py       reproducible scene and startup patcher
 resources/patch_clean_dll.py        managed-DLL startup patch helper
 resources/AKAIITO4x3Launcher.exe    standalone Windows launcher
-resources/AKAIITO4x3Launcher.c      launcher source
+resources/AKAIITO4x3Launcher.cs     portable launcher source
 ```
 
 No game files, extracted assets, screenshots, or original game binaries are included in this repository.
@@ -51,7 +51,7 @@ or:
 AKAIITO4x3Launcher.exe 1920 fullscreen
 ```
 
-The launcher is a standalone 64-bit Windows executable and does not contain or distribute the game.
+The launcher is a standalone Windows executable and does not contain or distribute the game. It resolves the game executable relative to its own location, so no machine-specific path is embedded.
 
 The supported development dependency versions used during investigation were:
 
