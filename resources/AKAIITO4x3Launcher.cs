@@ -3,9 +3,19 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 internal static class Program
 {
+    [DllImport("user32.dll")]
+    private static extern int ShowCursor(bool show);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
     private static int Main(string[] args)
     {
         int width;
@@ -44,9 +54,45 @@ internal static class Program
             WorkingDirectory = launcherDir,
             UseShellExecute = false
         };
-        Process.Start(psi);
-        Console.WriteLine("Launching AKAIITO at {0}x{1} ({2}).", width, height,
-            fullscreen ? "fullscreen" : "windowed");
-        return 0;
+        using (Process process = Process.Start(psi))
+        {
+            if (process == null)
+            {
+                Console.Error.WriteLine("Failed to start AKAIITO_HD_REMASTER.exe.");
+                return 4;
+            }
+
+            // Unity leaves the pointer visible for this title. Hide it while its
+            // window has focus, but restore it immediately when the user alt-tabs.
+            int hideCalls = 0;
+            bool cursorHidden = false;
+            try
+            {
+                while (!process.WaitForExit(100))
+                {
+                    uint foregroundProcess;
+                    GetWindowThreadProcessId(GetForegroundWindow(), out foregroundProcess);
+                    bool gameHasFocus = foregroundProcess == (uint)process.Id;
+
+                    if (gameHasFocus && !cursorHidden)
+                    {
+                        do { hideCalls++; }
+                        while (ShowCursor(false) >= 0);
+                        cursorHidden = true;
+                    }
+                    else if (!gameHasFocus && cursorHidden)
+                    {
+                        while (hideCalls-- > 0) ShowCursor(true);
+                        hideCalls = 0;
+                        cursorHidden = false;
+                    }
+                }
+                return process.ExitCode;
+            }
+            finally
+            {
+                while (hideCalls-- > 0) ShowCursor(true);
+            }
+        }
     }
 }
