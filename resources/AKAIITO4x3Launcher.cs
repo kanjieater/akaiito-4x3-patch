@@ -19,6 +19,12 @@ internal static class Program
     [DllImport("user32.dll")]
     private static extern bool SetCursorPos(int x, int y);
 
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int index);
+
+    private const int SmCxScreen = 0;
+    private const int SmCyScreen = 1;
+
     private static int Main(string[] args)
     {
         int width;
@@ -66,7 +72,7 @@ internal static class Program
             }
 
             // This Unity title does not honor cursor hiding. Put the pointer in
-            // the upper-left corner once its window receives focus instead.
+            // the bottom-right corner once its window receives focus instead.
             bool pointerMoved = false;
             DateTime? hungSince = null;
             while (!process.WaitForExit(100))
@@ -77,7 +83,8 @@ internal static class Program
 
                     if (gameHasFocus && !pointerMoved)
                     {
-                        SetCursorPos(0, 0);
+                        SetCursorPos(GetSystemMetrics(SmCxScreen) - 1,
+                            GetSystemMetrics(SmCyScreen) - 1);
                         pointerMoved = true;
                     }
 
