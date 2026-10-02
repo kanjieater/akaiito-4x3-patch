@@ -8,9 +8,6 @@ using System.Runtime.InteropServices;
 internal static class Program
 {
     [DllImport("user32.dll")]
-    private static extern int ShowCursor(bool show);
-
-    [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll")]
@@ -18,6 +15,9 @@ internal static class Program
 
     [DllImport("user32.dll")]
     private static extern bool IsHungAppWindow(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetCursorPos(int x, int y);
 
     private static int Main(string[] args)
     {
@@ -65,32 +65,20 @@ internal static class Program
                 return 4;
             }
 
-            // Unity leaves the pointer visible for this title. Hide it while its
-            // window has focus, but restore it immediately when the user alt-tabs.
-            int hideCalls = 0;
-            bool cursorHidden = false;
+            // This Unity title does not honor cursor hiding. Put the pointer in
+            // the upper-left corner once its window receives focus instead.
+            bool pointerMoved = false;
             DateTime? hungSince = null;
-            try
-            {
-                while (!process.WaitForExit(100))
+            while (!process.WaitForExit(100))
                 {
                     uint foregroundProcess;
                     GetWindowThreadProcessId(GetForegroundWindow(), out foregroundProcess);
                     bool gameHasFocus = foregroundProcess == (uint)process.Id;
 
-                    if (gameHasFocus)
+                    if (gameHasFocus && !pointerMoved)
                     {
-                        // The game repeatedly makes its cursor visible. Counter it
-                        // while focused; every hide is balanced below on alt-tab/exit.
-                        ShowCursor(false);
-                        hideCalls++;
-                        cursorHidden = true;
-                    }
-                    else if (cursorHidden)
-                    {
-                        while (hideCalls-- > 0) ShowCursor(true);
-                        hideCalls = 0;
-                        cursorHidden = false;
+                        SetCursorPos(0, 0);
+                        pointerMoved = true;
                     }
 
                     process.Refresh();
@@ -113,12 +101,7 @@ internal static class Program
                         hungSince = null;
                     }
                 }
-                return process.ExitCode;
-            }
-            finally
-            {
-                while (hideCalls-- > 0) ShowCursor(true);
-            }
+            return process.ExitCode;
         }
     }
 }
