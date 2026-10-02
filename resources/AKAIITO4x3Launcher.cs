@@ -16,6 +16,9 @@ internal static class Program
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
+    [DllImport("user32.dll")]
+    private static extern bool IsHungAppWindow(IntPtr window);
+
     private static int Main(string[] args)
     {
         int width;
@@ -66,6 +69,7 @@ internal static class Program
             // window has focus, but restore it immediately when the user alt-tabs.
             int hideCalls = 0;
             bool cursorHidden = false;
+            DateTime? hungSince = null;
             try
             {
                 while (!process.WaitForExit(100))
@@ -87,6 +91,26 @@ internal static class Program
                         while (hideCalls-- > 0) ShowCursor(true);
                         hideCalls = 0;
                         cursorHidden = false;
+                    }
+
+                    process.Refresh();
+                    if (process.MainWindowHandle != IntPtr.Zero && IsHungAppWindow(process.MainWindowHandle))
+                    {
+                        if (!hungSince.HasValue)
+                            hungSince = DateTime.UtcNow;
+                        else if ((DateTime.UtcNow - hungSince.Value).TotalSeconds >= 5)
+                        {
+                            // This Unity build deadlocks after its own title-screen
+                            // quit request. Let it try to shut down first, then avoid
+                            // leaving the user with a permanent "not responding" window.
+                            process.Kill();
+                            process.WaitForExit();
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        hungSince = null;
                     }
                 }
                 return process.ExitCode;

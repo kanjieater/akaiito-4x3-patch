@@ -67,7 +67,7 @@ AKAIITO-4x3-patch-manifest.json
 
 ### Launcher source
 
-The source for the release executable is `resources/AKAIITO4x3Launcher.cs`. The release executable is built as a windowless Windows .NET Framework application and does not require a separate runtime installation on normal Windows systems. It remains running until the game exits, returns the game's exit code, and hides the cursor only while the game has focus (restoring it when you alt-tab or the game closes).
+The source for the release executable is `resources/AKAIITO4x3Launcher.cs`. The release executable is built as a windowless Windows .NET Framework application and does not require a separate runtime installation on normal Windows systems. It remains running until the game exits and hides the cursor only while the game has focus (restoring it when you alt-tab or the game closes). This Unity build can deadlock after its title-screen quit request; if its window remains unresponsive for five seconds, the launcher closes the stuck process rather than leaving a permanent "not responding" window.
 
 Pass one width; the launcher derives the matching 4:3 height:
 
