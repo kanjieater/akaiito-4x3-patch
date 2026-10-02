@@ -19,6 +19,21 @@ internal static class Program
     [DllImport("user32.dll")]
     private static extern bool IsHungAppWindow(IntPtr window);
 
+    [DllImport("user32.dll")]
+    private static extern IntPtr CreateCursor(IntPtr instance, int xHotSpot, int yHotSpot,
+        int width, int height, byte[] andPlane, byte[] xorPlane);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetCursor(IntPtr cursor);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr LoadCursor(IntPtr instance, int cursorId);
+
+    [DllImport("user32.dll")]
+    private static extern bool DestroyCursor(IntPtr cursor);
+
+    private const int ArrowCursorId = 32512;
+
     private static int Main(string[] args)
     {
         int width;
@@ -70,9 +85,16 @@ internal static class Program
             int hideCalls = 0;
             bool cursorHidden = false;
             DateTime? hungSince = null;
+            // An all-one AND mask plus an all-zero XOR mask is fully transparent.
+            // SetCursor is needed because this Unity title re-shows its cursor after
+            // the ordinary ShowCursor call.
+            byte[] andPlane = new byte[128];
+            for (int i = 0; i < andPlane.Length; i++) andPlane[i] = 0xff;
+            IntPtr transparentCursor = CreateCursor(IntPtr.Zero, 0, 0, 32, 32,
+                andPlane, new byte[128]);
             try
             {
-                while (!process.WaitForExit(100))
+                while (!process.WaitForExit(20))
                 {
                     uint foregroundProcess;
                     GetWindowThreadProcessId(GetForegroundWindow(), out foregroundProcess);
@@ -84,12 +106,15 @@ internal static class Program
                         // while focused; every hide is balanced below on alt-tab/exit.
                         ShowCursor(false);
                         hideCalls++;
+                        if (transparentCursor != IntPtr.Zero)
+                            SetCursor(transparentCursor);
                         cursorHidden = true;
                     }
                     else if (cursorHidden)
                     {
                         while (hideCalls-- > 0) ShowCursor(true);
                         hideCalls = 0;
+                        SetCursor(LoadCursor(IntPtr.Zero, ArrowCursorId));
                         cursorHidden = false;
                     }
 
@@ -118,6 +143,10 @@ internal static class Program
             finally
             {
                 while (hideCalls-- > 0) ShowCursor(true);
+                if (cursorHidden)
+                    SetCursor(LoadCursor(IntPtr.Zero, ArrowCursorId));
+                if (transparentCursor != IntPtr.Zero)
+                    DestroyCursor(transparentCursor);
             }
         }
     }
