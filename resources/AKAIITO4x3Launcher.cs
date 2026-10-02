@@ -74,13 +74,15 @@ internal static class Program
                     GetWindowThreadProcessId(GetForegroundWindow(), out foregroundProcess);
                     bool gameHasFocus = foregroundProcess == (uint)process.Id;
 
-                    if (gameHasFocus && !cursorHidden)
+                    if (gameHasFocus)
                     {
-                        do { hideCalls++; }
-                        while (ShowCursor(false) >= 0);
+                        // The game repeatedly makes its cursor visible. Counter it
+                        // while focused; every hide is balanced below on alt-tab/exit.
+                        ShowCursor(false);
+                        hideCalls++;
                         cursorHidden = true;
                     }
-                    else if (!gameHasFocus && cursorHidden)
+                    else if (cursorHidden)
                     {
                         while (hideCalls-- > 0) ShowCursor(true);
                         hideCalls = 0;
