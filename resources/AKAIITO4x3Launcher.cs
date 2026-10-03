@@ -20,10 +20,30 @@ internal static class Program
     private static extern bool SetCursorPos(int x, int y);
 
     [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int index);
+    private static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
 
-    private const int SmCxScreen = 0;
-    private const int SmCyScreen = 1;
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+
+    private const uint MonitorDefaultToNearest = 2;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public Rect Monitor;
+        public Rect Work;
+        public uint Flags;
+    }
 
     private static int Main(string[] args)
     {
@@ -83,9 +103,18 @@ internal static class Program
 
                     if (gameHasFocus && !pointerMoved)
                     {
-                        SetCursorPos(GetSystemMetrics(SmCxScreen) - 1,
-                            GetSystemMetrics(SmCyScreen) - 1);
-                        pointerMoved = true;
+                        IntPtr monitor = MonitorFromWindow(process.MainWindowHandle,
+                            MonitorDefaultToNearest);
+                        var monitorInfo = new MonitorInfo
+                        {
+                            Size = Marshal.SizeOf(typeof(MonitorInfo))
+                        };
+                        if (monitor != IntPtr.Zero && GetMonitorInfo(monitor, ref monitorInfo))
+                        {
+                            SetCursorPos(monitorInfo.Monitor.Right - 1,
+                                monitorInfo.Monitor.Bottom - 1);
+                            pointerMoved = true;
+                        }
                     }
 
                     process.Refresh();
